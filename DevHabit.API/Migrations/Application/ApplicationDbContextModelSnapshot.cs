@@ -106,9 +106,8 @@ namespace DevHabit.API.Migrations.Application
                                 .HasColumnType("character varying(500)")
                                 .HasColumnName("id");
 
-                            b1.Property<string>("Current")
-                                .IsRequired()
-                                .HasColumnType("text")
+                            b1.Property<int>("Current")
+                                .HasColumnType("integer")
                                 .HasColumnName("milestone_current");
 
                             b1.Property<int>("Target")

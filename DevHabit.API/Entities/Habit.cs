@@ -54,5 +54,5 @@ public sealed class Target
 public sealed class Milestone 
 {
     public int Target { get; set; }
-    public string Current { get; set; }
+    public int Current { get; set; }
 }
