@@ -15,6 +15,18 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18889
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+
+  devhabit.postgres:
+    image: postgres:17.2
+    environment:
+        POSTGRES_DB: devhabit
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./.containers/postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432 # host port : docker port
+
   devhabit.seq:
     image: datalust/seq:2024.3
     environment:
