@@ -1,9 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using DevHabit.API.Database;
 using DevHabit.API.DTOs.Tags;
 using DevHabit.API.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace DevHabit.API.Controllers;
 
@@ -17,14 +22,13 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
         List<TagDto> tags = await dbContext
             .Tags
             .Select(TagsQueries.ProjectToDto())
+            .AsNoTracking()
             .ToListAsync();
 
-        var habitsCollectionDto = new TagsCollectionDto
+        return Ok(new TagsCollectionDto
         {
             Data = tags
-        };
-
-        return Ok(habitsCollectionDto);
+        });
     }
 
     [HttpGet("{id}")]
@@ -45,13 +49,30 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateTag(CreateTagDto createTagDto)
+    public async Task<ActionResult<TagDto>> CreateTag(
+        CreateTagDto createTagDto,
+        IValidator<CreateTagDto> validator,
+        ProblemDetailsFactory problemDetailsFactory)
     {
+        ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
+
+        if(!validationResult.IsValid)
+        {
+            ProblemDetails problem = problemDetailsFactory.CreateProblemDetails(
+                HttpContext,
+                StatusCodes.Status400BadRequest);
+            problem.Extensions.Add("errors", validationResult.ToDictionary());
+
+            return BadRequest(problem);
+        }
+
         Tag tag = createTagDto.ToEntity();
 
         if(await dbContext.Tags.AnyAsync(t => t.Name == tag.Name))
         {
-            return Conflict($"The tag '{tag.Name}' already exists");
+            return Problem(
+                detail: $"The tag '{tag.Name}' already exists",
+                statusCode: StatusCodes.Status409Conflict);
         }
 
         dbContext.Tags.Add(tag);

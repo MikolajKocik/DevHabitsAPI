@@ -1,5 +1,6 @@
 using DevHabit.API.Database;
 using DevHabit.API.Extensions;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
@@ -16,7 +17,18 @@ builder.Services.AddControllers(options =>
     options.ReturnHttpNotAcceptable = true;
 })
 .AddNewtonsoftJson() // newtonsoft json
-.AddXmlDataContractSerializerFormatters(); 
+.AddXmlDataContractSerializerFormatters();
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>(); // dependency injection fluend validation
+
+// Problem details configuration
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier); // for open telemetry e.g.: aspire
+    };
+});
 
 builder.Services.AddOpenApi();
 
