@@ -8,11 +8,12 @@ services:
       - 5000:8080
       - 5001:8081
     environment:
+      - ASPNETCORE_ENVIRONMENT=Development
       # Seq
       # place where we sending telemetry data (local)
-      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.seq:5341/ingest/otlp # dockert net
-      # - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf # internal port who accepting telemetry data
-      - ASPNETCORE_ENVIRONMENT=Development
+      #- OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.seq:5341/ingest/otlp # dockert net
+      #- OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf # internal port who accepting telemetry data
+      # aspire
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18889
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 
