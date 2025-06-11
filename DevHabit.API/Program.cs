@@ -1,5 +1,6 @@
 using DevHabit.API.Database;
 using DevHabit.API.Extensions;
+using DevHabit.API.Middleware;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -29,6 +30,8 @@ builder.Services.AddProblemDetails(options =>
         context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier); // for open telemetry e.g.: aspire
     };
 });
+builder.Services.AddExceptionHandler<GLobalExceptionHandler>(); // middleware
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 
 builder.Services.AddOpenApi();
 
@@ -71,6 +74,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+// Middleware
+app.UseExceptionHandler();
 
 app.MapControllers();
 
