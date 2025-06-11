@@ -1,14 +1,14 @@
-﻿using DevHabit.API.DTOs.HabitTags;
+﻿using DevHabit.API.DTOs.Habits;
 using DevHabit.API.Entities;
 using System.Linq.Expressions;
 
-namespace DevHabit.API.DTOs.Habits;
+namespace DevHabit.API.DTOs.HabitTags;
 
-internal static class HabitQueries
+internal class HabitWithTagsQueriesBase
 {
-    public static Expression<Func<Habit, HabitDto>> ProjectToDto()
+    public static Expression<Func<Habit, HabitWithTagsDto>> ProjectToHabitWithTagsDto()
     {
-        return h => new HabitDto
+        return h => new HabitWithTagsDto
         {
             Id = h.Id,
             Name = h.Name,
@@ -36,6 +36,7 @@ internal static class HabitQueries
             CreatedAtUtc = h.CreatedAtUtc,
             UpdatedAtUtc = h.UpdatedAtUtc,
             LastCompletedAtUtc = h.LastCompletedAtUtc,
+            Tags = h.Tags.Select(t => t.Name).ToArray()
         };
     }
 }
