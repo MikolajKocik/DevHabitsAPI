@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace DevHabit.API.DTOs.HabitTags;
 
-internal class HabitWithTagsQueriesBase
+internal static class HabitWithTagsQueriesBase
 {
     public static Expression<Func<Habit, HabitWithTagsDto>> ProjectToHabitWithTagsDto()
     {
