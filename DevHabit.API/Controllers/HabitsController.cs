@@ -90,7 +90,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
 
         patchDocument.ApplyTo(habitDto, ModelState); 
 
-        if(!ModelState.IsValid)
+        if(!TryValidateModel(habitDto))
         {
             return ValidationProblem(ModelState);
         }
