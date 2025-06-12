@@ -1,6 +1,9 @@
 using DevHabit.API.Database;
+using DevHabit.API.DTOs.Habits;
+using DevHabit.API.Entities;
 using DevHabit.API.Extensions;
 using DevHabit.API.Middleware;
+using DevHabit.API.Services.Sorting;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -61,6 +64,15 @@ builder.Logging.AddOpenTelemetry(options =>
     options.IncludeScopes = true;
     options.IncludeFormattedMessage = true;
 });
+
+// Sorting
+
+builder.Services.AddTransient<SortMappingProvider>();
+
+builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ =>
+    HabitMappings.SortMapping);
+
+// =============
 
 WebApplication app = builder.Build();
 

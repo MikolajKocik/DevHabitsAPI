@@ -1,16 +1,17 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
+using System.Linq.Dynamic.Core;
 using System.Runtime.InteropServices.JavaScript;
 using DevHabit.API.Database;
 using DevHabit.API.DTOs.Habits;
 using DevHabit.API.DTOs.HabitTags;
 using DevHabit.API.Entities;
-using DevHabit.API.Extensions;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using DevHabit.API.Services.Sorting;
 
 namespace DevHabit.API.Controllers;
 
@@ -19,18 +20,28 @@ namespace DevHabit.API.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitQueryParameters query)
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitQueryParameters query, SortMappingProvider sortMappingProvider)
     {
+        if(!sortMappingProvider.ValidateMapping<HabitDto, Habit>(query.Sort))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"The provided sort parameter isnt' valid: '{query.Sort}'");
+        }
+
         query.Search = query.Search?.Trim().ToLower();
 
-        IQueryable<Habit> habitsQuery = dbContext.Habits;
+        SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
+
+        IQueryable<Habit> habitsQuery = dbContext.Habits;  
 
         if(!string.IsNullOrWhiteSpace(query.Search))
         {
             habitsQuery = habitsQuery.Where(h => EF.Functions.ILike(h.Name, $"%{query.Search}%") ||
                  h.Description != null && EF.Functions.ILike(h.Description, $"%{query.Search}%"))
                 .QueryHasValue(query.Status.HasValue, h => h.Status == query.Status) // ex method
-                .QueryHasValue(query.Type.HasValue, h => h.Type == query.Type);
+                .QueryHasValue(query.Type.HasValue, h => h.Type == query.Type)
+                .ApplySort(query.Sort, sortMappings);
         }
 
         List<HabitDto> habits = await habitsQuery

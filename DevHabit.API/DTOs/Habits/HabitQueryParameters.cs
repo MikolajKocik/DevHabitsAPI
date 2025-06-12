@@ -11,5 +11,6 @@ public sealed record HabitQueryParameters
     public string? Search { get; set; }
     public HabitType? Type { get; init; }
     public HabitStatus? Status { get; init; }
+    public string? Sort { get; set; }
 }
 
