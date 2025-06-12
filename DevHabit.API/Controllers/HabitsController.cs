@@ -1,8 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.InteropServices.JavaScript;
 using DevHabit.API.Database;
 using DevHabit.API.DTOs.Habits;
 using DevHabit.API.DTOs.HabitTags;
 using DevHabit.API.Entities;
+using DevHabit.API.Extensions;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.JsonPatch;
@@ -16,10 +19,21 @@ namespace DevHabit.API.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits()
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitQueryParameters query)
     {
-        List<HabitDto> habits = await dbContext
-            .Habits
+        query.Search = query.Search?.Trim().ToLower();
+
+        IQueryable<Habit> habitsQuery = dbContext.Habits;
+
+        if(!string.IsNullOrWhiteSpace(query.Search))
+        {
+            habitsQuery = habitsQuery.Where(h => EF.Functions.ILike(h.Name, $"%{query.Search}%") ||
+                 h.Description != null && EF.Functions.ILike(h.Description, $"%{query.Search}%"))
+                .QueryHasValue(query.Status.HasValue, h => h.Status == query.Status) // ex method
+                .QueryHasValue(query.Type.HasValue, h => h.Type == query.Type);
+        }
+
+        List<HabitDto> habits = await habitsQuery
             .Select(HabitQueries.ProjectToDto())
             .AsNoTracking()
             .ToListAsync();
@@ -61,6 +75,13 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         }
 
         Habit habit = createHabitDto.ToEntity();
+
+        bool exists = await dbContext.Habits.AnyAsync(h => h.Name == habit.Name);
+
+        if(exists)
+        {
+            return Conflict($"Habit '{habit.Name}' already exists");
+        }
 
         dbContext.Habits.Add(habit);
 
