@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using DevHabit.API.Database;
+using DevHabit.API.DTOs.Common;
 using DevHabit.API.DTOs.Tags;
 using DevHabit.API.Entities;
 using FluentValidation;
@@ -17,7 +18,7 @@ namespace DevHabit.API.Controllers;
 public sealed class TagsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<TagsCollectionDto>> GetTags()
+    public async Task<ActionResult<PaginationResult<TagDto>>> GetTags()
     {
         List<TagDto> tags = await dbContext
             .Tags
@@ -25,9 +26,9 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
             .AsNoTracking()
             .ToListAsync();
 
-        return Ok(new TagsCollectionDto
+        return Ok(new PaginationResult<TagDto>
         {
-            Data = tags
+            Items = tags
         });
     }
 
